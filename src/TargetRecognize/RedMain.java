@@ -4,12 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -120,8 +114,8 @@ public class RedMain {
 		circlesList.add(circle); //если нужен список со всеми кругами
 		// ---------------------------------------------------------------
 
-		var myCircle = detectedRedPointOnTarget(imageLabel, myPicture, imgIcon);
-		checkTarget(circlesList, myCircle);
+//		var myCircle = detectedRedPointOnTarget(imageLabel, myPicture, imgIcon);
+//		checkTarget(circlesList, myCircle);
 		
 	}
 
@@ -149,15 +143,48 @@ public class RedMain {
 			imageLabel.drawCircles(circlesList);
 			circlesList.add(circle); //если нужен список со всеми кругами
 
-			//
-			//RedSearch redSearch = new RedSearch(myPicture);
-//			Circle myPointByCoordinate = redSearch.findRedPointsAsCircle();
-//			System.out.println("Get radius myPointByCoordinate = "+myPointByCoordinate.getRadius());
-//			System.out.println("Get x myPointByCoordinate = "+myPointByCoordinate.getX());
-//			System.out.println("Get y myPointByCoordinate = "+myPointByCoordinate.getY());
+			// Новый алгоритм точности попадания:
+			int circleIndex = getCircleIndByXY(myPoint.getX(), myPoint.getY(), circlesList);
+			if (circleIndex==0) System.out.println("Red point detected in center.");
+			else if (circleIndex > circlesList.size()) System.out.println("Red point detected with miss.");
+			else System.out.println("Red point detected between "+(circleIndex-1)+" and "+(circleIndex+1));
+			// ----------------------------------------------------------------------
 			
 		}
 	}
+
+	// Методы для алгоритма точности попадания:
+	private static int getCircleIndByXY(int xRedPoint, int yRedPoint, ArrayList<Circle> circles2) {
+		int i = 0;
+		for (Circle circle : circles2) {
+			int count = circles2.indexOf(circle);
+			// Проверяем чтобы следующий круг не выходил за границы:
+			if ((count) <circles2.size()-1 ){
+				Circle circleNext = circles2.get(count + 1);
+				if (circleIs_OnXY(circle, circleNext, xRedPoint, yRedPoint)) return i;
+				i++;
+			}
+		}
+		return -1;
+	}
+
+	private static boolean circleIs_OnXY(Circle circle,Circle circleNext, int xRedPoint, int yRedPoint) {
+//		(x – a)2 + (y – b)2 = R2
+		int circleRc1 = circle.getRadius();
+		int circleRc2 = circleNext.getRadius();
+		int thick = circle.getThickness();
+		// Левая часть нужна для нахождения радиуса от центра до нашей красной точки:
+		double leftPart_1 = Math.pow(xRedPoint-circle.getX(), 2) + Math.pow(yRedPoint-circle.getY(), 2);
+		double leftPart_2 = Math.pow(xRedPoint-circleNext.getX(), 2) + Math.pow(yRedPoint-circleNext.getY(), 2);
+		// И сравниваем с радиусами текущего и следующего круга:
+		if (leftPart_1>=((circleRc1-thick)*(circleRc1-thick)) && leftPart_2<=((circleRc2+thick)*(circleRc2+thick)))
+			return true;
+		return false;
+	}
+	//__________________________________________________________________________________________________________________
+
+
+
 
 // Метод добaвленный из IDEA:
 	// metod for detected red poins on target:
@@ -170,90 +197,90 @@ public class RedMain {
 		SearchCircleAndPoint redSearch = new SearchCircleAndPoint(myPicture);
 
         Circle myPoint = redSearch.findRedPointsAsCircle(); // это наша красная точка
-        
+
         imageLabel.drawPoint(myPoint, dHeight);//, обведенная синим квадратом
-        
+
         System.out.println("red dot circle = " + myPoint.getX() + " " + myPoint.getY() + " " + myPoint.getRadius());
         return myPoint;
 
 
     }
 
-	// metod for detected red poins on target:
-	private static Circle detectedRedPointOnTarget(MyLabel imageLabel, BufferedImage myPicture, ImageIcon imgIcon,ArrayList<Circle> circlesList) {
-		System.out.println("metod detectedRedPointOnTarget");
-		float dHeight = imageLabel.getHeight() / (float) myPicture.getHeight();
-		int newWidth = (int) (myPicture.getWidth() * dHeight);
-		Image dimg = myPicture.getScaledInstance(newWidth, imageLabel.getHeight(), Image.SCALE_SMOOTH);
-		imgIcon.setImage(dimg);
-		SearchCircleAndPoint redSearch = new SearchCircleAndPoint(myPicture);
-
-		System.out.println("\ncircleList size = " + circlesList.size() + "\n");
-		Circle myCircle = redSearch.findRedPointsAsCircle(); // это наша красная точка, обведенная окружностью
-		imageLabel.drawPoint(myCircle, dHeight);
-		System.out.println("red dot circle = " + myCircle.getX() + " " + myCircle.getY() + " " + myCircle.getRadius());
-		return myCircle;
-	}
+//	// metod for detected red poins on target:
+//	private static Circle detectedRedPointOnTarget(MyLabel imageLabel, BufferedImage myPicture, ImageIcon imgIcon,ArrayList<Circle> circlesList) {
+//		System.out.println("metod detectedRedPointOnTarget");
+//		float dHeight = imageLabel.getHeight() / (float) myPicture.getHeight();
+//		int newWidth = (int) (myPicture.getWidth() * dHeight);
+//		Image dimg = myPicture.getScaledInstance(newWidth, imageLabel.getHeight(), Image.SCALE_SMOOTH);
+//		imgIcon.setImage(dimg);
+//		SearchCircleAndPoint redSearch = new SearchCircleAndPoint(myPicture);
+//
+//		System.out.println("\ncircleList size = " + circlesList.size() + "\n");
+//		Circle myCircle = redSearch.findRedPointsAsCircle(); // это наша красная точка, обведенная окружностью
+//		imageLabel.drawPoint(myCircle, dHeight);
+//		System.out.println("red dot circle = " + myCircle.getX() + " " + myCircle.getY() + " " + myCircle.getRadius());
+//		return myCircle;
+//	}
 
 	// todo исправить алгоритм нахождения точности красной точки.
 	// Проблема заключается в том что он находит красную точку только в центре
 	// а во внешних кругах он видит как промах.
 
-	private static void checkTarget(ArrayList<Circle> circlesList, Circle myCircle) {
-		System.out.println("metod checkTarget");
-		System.out.println("Going through the target: ");
-		System.out.println("circles = "+circlesList.size());
-
-		boolean miss = false, between = false;
-		for (Circle circle0 : circlesList) {
-			int i = circlesList.indexOf(circle0);
-
-			Circle circle1 = circlesList.get(i + 1);
-
-			int Cx = circle0.getX();
-			int Cy = circle0.getY();
-			int R = circle0.getRadius();
-
-
-			// Проверяем на промах:
-			if (i < circlesList.size() - 1 && checkRedPointAndCircleOut(myCircle, circle0)) {
-				System.out.println("miss");
-				miss = true;
-				break;
-			}
-			// Проверяем окружности на попадания без внутренего круга и промаха:
-			if ( i < circlesList.size() - 1 && checkRedPointAndCircle(myCircle, circle0, circle1)) {
-				System.out.println("between " + i + " & " + (i + 1));
-				between = true;
-				break;
-			}
-			//  Проверяем на попадание во внутрению окружность:
-			if (circle1 == circlesList.get(2) && (!miss && !between)) {
-				System.out.println("in center");
-				break;
-			}
-		}
-	}
-
-	private static double getRadius(Circle myCircle, Circle circle0) {
-		return Math.pow((myCircle.getX() - circle0.getX()), 2) + Math.pow((myCircle.getY() - circle0.getY()), 2);
-	}
-
-	private static boolean checkRedPointAndCircleOut(Circle myCircle, Circle circle) {
-		if (getRadius(myCircle, circle) > Math.pow(circle.getRadius(), 2)) return true;
-		return false;
-	}
-
-	private static boolean checkRedPointAndCircleCentre(Circle myCircle, Circle circle) {
-		if (getRadius(myCircle, circle) < Math.pow(circle.getRadius(), 2)) return true;
-		return false;
-	}
-
-	private static boolean checkRedPointAndCircle(Circle myCircle, Circle circle0, Circle circle1) {
-		if (getRadius(myCircle, circle0) < Math.pow(circle0.getRadius(), 2)
-				&& getRadius(myCircle, circle1) > Math.pow(circle1.getRadius(), 2))
-			return true;
-		return false;
-	}
+//	private static void checkTarget(ArrayList<Circle> circlesList, Circle myCircle) {
+//		System.out.println("metod checkTarget");
+//		System.out.println("Going through the target: ");
+//		System.out.println("circles = "+circlesList.size());
+//
+//		boolean miss = false, between = false;
+//		for (Circle circle0 : circlesList) {
+//			int i = circlesList.indexOf(circle0);
+//
+//			Circle circle1 = circlesList.get(i + 1);
+//
+//			int Cx = circle0.getX();
+//			int Cy = circle0.getY();
+//			int R = circle0.getRadius();
+//
+//
+//			// Проверяем на промах:
+//			if (i < circlesList.size() - 1 && checkRedPointAndCircleOut(myCircle, circle0)) {
+//				System.out.println("miss");
+//				miss = true;
+//				break;
+//			}
+//			// Проверяем окружности на попадания без внутренего круга и промаха:
+//			if ( i < circlesList.size() - 1 && checkRedPointAndCircle(myCircle, circle0, circle1)) {
+//				System.out.println("between " + i + " & " + (i + 1));
+//				between = true;
+//				break;
+//			}
+//			//  Проверяем на попадание во внутрению окружность:
+//			if (circle1 == circlesList.get(2) && (!miss && !between)) {
+//				System.out.println("in center");
+//				break;
+//			}
+//		}
+//	}
+//
+//	private static double getRadius(Circle myCircle, Circle circle0) {
+//		return Math.pow((myCircle.getX() - circle0.getX()), 2) + Math.pow((myCircle.getY() - circle0.getY()), 2);
+//	}
+//
+//	private static boolean checkRedPointAndCircleOut(Circle myCircle, Circle circle) {
+//		if (getRadius(myCircle, circle) > Math.pow(circle.getRadius(), 2)) return true;
+//		return false;
+//	}
+//
+//	private static boolean checkRedPointAndCircleCentre(Circle myCircle, Circle circle) {
+//		if (getRadius(myCircle, circle) < Math.pow(circle.getRadius(), 2)) return true;
+//		return false;
+//	}
+//
+//	private static boolean checkRedPointAndCircle(Circle myCircle, Circle circle0, Circle circle1) {
+//		if (getRadius(myCircle, circle0) < Math.pow(circle0.getRadius(), 2)
+//				&& getRadius(myCircle, circle1) > Math.pow(circle1.getRadius(), 2))
+//			return true;
+//		return false;
+//	}
 
 }
