@@ -145,6 +145,10 @@ public class RedMain {
 
 			// Новый алгоритм точности попадания:
 			int circleIndex = getCircleIndByXY(myPoint.getX(), myPoint.getY(), circlesList);
+			System.out.println("circleIndex = "+circleIndex);
+
+			// todo Сделать алгоритм для расспознования центра и промаха
+			// аналогично за исключением того что сравниваться будет с одним кругом, а не с двумя.
 			if (circleIndex==0) System.out.println("Red point detected in center.");
 			else if (circleIndex > circlesList.size()) System.out.println("Red point detected with miss.");
 			else System.out.println("Red point detected between "+(circleIndex-1)+" and "+(circleIndex+1));
@@ -161,7 +165,10 @@ public class RedMain {
 			// Проверяем чтобы следующий круг не выходил за границы:
 			if ((count) <circles2.size()-1 ){
 				Circle circleNext = circles2.get(count + 1);
-				if (circleIs_OnXY(circle, circleNext, xRedPoint, yRedPoint)) return i;
+				if (circleIs_OnXY(circle, circleNext, xRedPoint, yRedPoint)){
+					System.out.println("\n\n i = " + i);
+					return i;
+				}
 				i++;
 			}
 		}
@@ -175,10 +182,28 @@ public class RedMain {
 		int thick = circle.getThickness();
 		// Левая часть нужна для нахождения радиуса от центра до нашей красной точки:
 		double leftPart_1 = Math.pow(xRedPoint-circle.getX(), 2) + Math.pow(yRedPoint-circle.getY(), 2);
+		System.out.println("");
+		System.out.println("");
+		System.out.println("xRedPoint-circle.getX()"+(xRedPoint-circle.getX()));
+		System.out.println("yRedPoint-circle.getY()"+(yRedPoint-circle.getY()));
+		System.out.println("leftPart_1 = "+leftPart_1);
+		// Значения в leftPart_1 и leftPart_2 одинаковые!!!
 		double leftPart_2 = Math.pow(xRedPoint-circleNext.getX(), 2) + Math.pow(yRedPoint-circleNext.getY(), 2);
+		System.out.println("xRedPoint-circleNext.getX()"+(xRedPoint-circleNext.getX()));
+		System.out.println("yRedPoint-circleNext.getY()"+(yRedPoint-circleNext.getY()));
+		System.out.println("leftPart_2 = "+leftPart_2);
+		System.out.println("");
+		System.out.println("");
 		// И сравниваем с радиусами текущего и следующего круга:
-		if (leftPart_1>=((circleRc1-thick)*(circleRc1-thick)) && leftPart_2<=((circleRc2+thick)*(circleRc2+thick)))
+		if (leftPart_1>=((circleRc1)*(circleRc1)) && leftPart_2<=((circleRc2)*(circleRc2)))
+		{
+			System.out.println("\n\nleftPart_1 = "+leftPart_1);
+			System.out.println("circleRc1^2 = "+(circleRc1)*(circleRc1));
+			System.out.println("circleRc1^2 = "+(circleRc2)*(circleRc2));
+			System.out.println("\n\n");
 			return true;
+		}
+
 		return false;
 	}
 	//__________________________________________________________________________________________________________________
