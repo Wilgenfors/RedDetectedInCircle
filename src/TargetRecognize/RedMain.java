@@ -147,23 +147,33 @@ public class RedMain {
 			int circleIndex = getCircleIndByXY(myPoint.getX(), myPoint.getY(), circlesList);
 			System.out.println("circleIndex = "+circleIndex);
 
-			// todo Сделать алгоритм для расспознования центра и промаха
-			// аналогично за исключением того что сравниваться будет с одним кругом, а не с двумя.
-			if (circleIndex==0) System.out.println("Red point detected in center.");
-			else if (circleIndex > circlesList.size()) System.out.println("Red point detected with miss.");
-			else System.out.println("Red point detected between "+(circleIndex-1)+" and "+(circleIndex+1));
+			// Если точка в центре или в области промаха:
+			if (circleIndex == -1){
+				int soloCircleIndex = getSoloCircleIndByXY(myPoint.getX(), myPoint.getY(), circlesList);
+				if (soloCircleIndex==-99) {
+					System.out.println("circleIndex = "+soloCircleIndex);
+					System.out.println("Red point detected in center");
+				}
+				else if (soloCircleIndex==99){
+					System.out.println("circleIndex = "+soloCircleIndex);
+					System.out.println("Red point detected in miss");
+				}
+			}
+			// Если точка находится между кругами
+			else if (circleIndex < circlesList.size())
+			 System.out.println("Red point detected in  "+(circleIndex));
 			// ----------------------------------------------------------------------
 			
 		}
 	}
 
-	// Методы для алгоритма точности попадания:
+	// Методы для алгоритма точности попадания между кругами:
 	private static int getCircleIndByXY(int xRedPoint, int yRedPoint, ArrayList<Circle> circles2) {
 		int i = 0;
 		for (Circle circle : circles2) {
 			int count = circles2.indexOf(circle);
 			// Проверяем чтобы следующий круг не выходил за границы:
-			if ((count) <circles2.size()-1 ){
+			if ((count) < circles2.size()-1 ){
 				Circle circleNext = circles2.get(count + 1);
 				if (circleIs_OnXY(circle, circleNext, xRedPoint, yRedPoint)){
 					System.out.println("\n\n i = " + i);
@@ -172,6 +182,7 @@ public class RedMain {
 				i++;
 			}
 		}
+		// Возвращает -1 если красная точка в центре или в области промаха.
 		return -1;
 	}
 
@@ -206,6 +217,27 @@ public class RedMain {
 
 		return false;
 	}
+
+
+
+	// Методы для алгоритма точности попадания центр или в область промаха:
+	private static int getSoloCircleIndByXY(int xRedPoint, int yRedPoint, ArrayList<Circle> circles2) {
+		int i = 0;
+		// Передаю первый и последний круг в метод circleSoloIs_OnXY:
+		Circle circleCentre =  circles2.get(1);
+		//Circle circleLast =  circles2.get(circles2.size());
+
+		// Возвращает -99 если красная точка в центре или 99 если в области промаха.
+
+			// Левая часть нужна для нахождения радиуса от центра до нашей красной точки:
+			double leftPart = Math.pow(xRedPoint-circleCentre.getX(), 2) + Math.pow(yRedPoint-circleCentre.getY(), 2);
+
+			// Возвращает -99 если красная точка в центре или 99 если в области промаха.
+			if (leftPart<=((circleCentre.getRadius())*(circleCentre.getRadius()))) return -99;
+			return 99;
+	}
+
+
 	//__________________________________________________________________________________________________________________
 
 
@@ -230,82 +262,5 @@ public class RedMain {
 
 
     }
-
-//	// metod for detected red poins on target:
-//	private static Circle detectedRedPointOnTarget(MyLabel imageLabel, BufferedImage myPicture, ImageIcon imgIcon,ArrayList<Circle> circlesList) {
-//		System.out.println("metod detectedRedPointOnTarget");
-//		float dHeight = imageLabel.getHeight() / (float) myPicture.getHeight();
-//		int newWidth = (int) (myPicture.getWidth() * dHeight);
-//		Image dimg = myPicture.getScaledInstance(newWidth, imageLabel.getHeight(), Image.SCALE_SMOOTH);
-//		imgIcon.setImage(dimg);
-//		SearchCircleAndPoint redSearch = new SearchCircleAndPoint(myPicture);
-//
-//		System.out.println("\ncircleList size = " + circlesList.size() + "\n");
-//		Circle myCircle = redSearch.findRedPointsAsCircle(); // это наша красная точка, обведенная окружностью
-//		imageLabel.drawPoint(myCircle, dHeight);
-//		System.out.println("red dot circle = " + myCircle.getX() + " " + myCircle.getY() + " " + myCircle.getRadius());
-//		return myCircle;
-//	}
-
-	// todo исправить алгоритм нахождения точности красной точки.
-	// Проблема заключается в том что он находит красную точку только в центре
-	// а во внешних кругах он видит как промах.
-
-//	private static void checkTarget(ArrayList<Circle> circlesList, Circle myCircle) {
-//		System.out.println("metod checkTarget");
-//		System.out.println("Going through the target: ");
-//		System.out.println("circles = "+circlesList.size());
-//
-//		boolean miss = false, between = false;
-//		for (Circle circle0 : circlesList) {
-//			int i = circlesList.indexOf(circle0);
-//
-//			Circle circle1 = circlesList.get(i + 1);
-//
-//			int Cx = circle0.getX();
-//			int Cy = circle0.getY();
-//			int R = circle0.getRadius();
-//
-//
-//			// Проверяем на промах:
-//			if (i < circlesList.size() - 1 && checkRedPointAndCircleOut(myCircle, circle0)) {
-//				System.out.println("miss");
-//				miss = true;
-//				break;
-//			}
-//			// Проверяем окружности на попадания без внутренего круга и промаха:
-//			if ( i < circlesList.size() - 1 && checkRedPointAndCircle(myCircle, circle0, circle1)) {
-//				System.out.println("between " + i + " & " + (i + 1));
-//				between = true;
-//				break;
-//			}
-//			//  Проверяем на попадание во внутрению окружность:
-//			if (circle1 == circlesList.get(2) && (!miss && !between)) {
-//				System.out.println("in center");
-//				break;
-//			}
-//		}
-//	}
-//
-//	private static double getRadius(Circle myCircle, Circle circle0) {
-//		return Math.pow((myCircle.getX() - circle0.getX()), 2) + Math.pow((myCircle.getY() - circle0.getY()), 2);
-//	}
-//
-//	private static boolean checkRedPointAndCircleOut(Circle myCircle, Circle circle) {
-//		if (getRadius(myCircle, circle) > Math.pow(circle.getRadius(), 2)) return true;
-//		return false;
-//	}
-//
-//	private static boolean checkRedPointAndCircleCentre(Circle myCircle, Circle circle) {
-//		if (getRadius(myCircle, circle) < Math.pow(circle.getRadius(), 2)) return true;
-//		return false;
-//	}
-//
-//	private static boolean checkRedPointAndCircle(Circle myCircle, Circle circle0, Circle circle1) {
-//		if (getRadius(myCircle, circle0) < Math.pow(circle0.getRadius(), 2)
-//				&& getRadius(myCircle, circle1) > Math.pow(circle1.getRadius(), 2))
-//			return true;
-//		return false;
-//	}
 
 }
